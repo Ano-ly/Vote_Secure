@@ -177,7 +177,7 @@ actor VoteSecure {
   };
 
   //public function: creates new election
-  public func createNewElection(title : Text, adminName : Text, adminPass : Text, pollList : [(Text, [(Text, Text)])]) : async Text {
+  public func createNewElection(adminName : Text, adminPass : Text, title : Text, pollList : [(Text, [(Text, Text)])]) : async Text {
     for (admin in ExistingAdmins.vals()) {
       if (admin.username == adminName) {
         if (adminPass == admin.password) {
@@ -351,7 +351,7 @@ actor VoteSecure {
 
   //casts votes for all the polls in a particular election, for a single voterID
   //sample input: (33433, [(position1, "Candidate3"), (position2, "Candidate1")])
-  public func castOverallVote(voterID : Nat, listOfVotes : [(Text, Text)], electionID : Nat) : async Text{
+  public func castOverallVote(voterID : Nat,  electionID : Nat, listOfVotes : [(Text, Text)]) : async Text{
     let authStatus : Bool = await authenticateVoter(voterID, electionID);
     if (authStatus == false) {
       return "Unidentified Voter";
@@ -367,7 +367,7 @@ actor VoteSecure {
   };
 
   //retrieve votes stats
-  public query func getVotes(electionID : Nat): async Text {
+  public query func getElectionStats(electionID : Nat): async Text {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
         let electionStats = Buffer.Buffer<(Text, [(Text, Nat)])>(0);
