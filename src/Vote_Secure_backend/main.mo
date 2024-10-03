@@ -7,6 +7,7 @@ actor VoteSecure {
   //Type Candidate
   public type Candidate = {
     name : Text;
+    description : Text;
     pollName : Text;
     manifesto : Text;
     var no_of_votes : Nat;
@@ -26,6 +27,8 @@ actor VoteSecure {
     title : Text;
     var id : Nat;
     adminName : Text;
+    description : Text;
+    date_created : Text;
     var voterIDsArr : [Nat];
     var realVotersArr : [var (Text, Nat)];
     var polls : [Poll];
@@ -86,6 +89,23 @@ actor VoteSecure {
     return [];
   };
 
+  //authenticates admin (for admin login)
+  //returns "Success" if admin authenticated
+  //returns "Fail" if admin not authenticated
+  //returns "Username does not exist" if admin account with username provided does not exist
+  public query func authenticateAdmin(username : Text, password : Text) : async Text {
+    for (admin in ExistingAdmins.vals()) {
+      if (admin.username == username) {
+        if (password == admin.password) {
+          return "Success";
+        } else {
+          return "Fail";
+        };
+      };
+    };
+    return "Username does not exist";
+  };
+
   //sign up for admin
   //Returns ("Success", "Nil") is successfully signed in
   //Returns ("Fail", "<Error message>") if sign in failed
@@ -134,7 +154,7 @@ actor VoteSecure {
   //returns true if poll created
   //returns false if poll not created
   //sample input ("President", 344233322, [("CandidateA", "Manifesto: I will make the world a better place")])
-  func createPoll(pollName : Text, electionID : Nat, candidates : [(Text, Text)]) : Text {
+  func createPoll(pollName : Text, electionID : Nat, candidates : [(Text, Text, Text)]) : Text {
     for (election in ExistingElections.vals()) {
       let pollNamesBuff = Buffer.fromArray<Text>(election.pollNames);
       let pollsBuff = Buffer.fromArray<Poll>(election.polls);
@@ -165,6 +185,7 @@ actor VoteSecure {
 
           let newCand = {
             name = candidate.0;
+            description = candidate.2;
             pollName = pollName;
             manifesto = candidate.1;
             var no_of_votes = 0;
@@ -190,11 +211,11 @@ actor VoteSecure {
   };
 
   //public function: creates new election
-  public func createNewElection(adminName : Text, adminPass : Text, title : Text, pollList : [(Text, [(Text, Text)])]) : async (Text, Text) {
+  public func createNewElection(date : Text, adminName : Text, adminPass : Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])]) : async (Text, Text) {
     for (admin in ExistingAdmins.vals()) {
       if (admin.username == adminName) {
         if (adminPass == admin.password) {
-          let electionReturn : (Text, Text) = await createElection(title, pollList, adminName);
+          let electionReturn : (Text, Text) = await createElection(date, title, desc, pollList, adminName);
           return electionReturn;
         } else {
           return ("Fail", "Wrong Password");
@@ -208,7 +229,7 @@ actor VoteSecure {
   //sample pollList : [("President", [("CandidateA", "Manifesto: I will make the world a better place"), ("CandidateB", "Manifesto: I will make the world a better place")])]
   //returns ("Success", <ID of new election>) if successful
   //returns ("Fail", "<Error message>") if fail
-  func createElection(title : Text, pollList : [(Text, [(Text, Text)])], adminName : Text) : async (Text, Text) {
+  func createElection(date: Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])], adminName : Text) : async (Text, Text) {
     for (admin in ExistingAdmins.vals()) {
       //if admin with username adminName found:
       if (admin.username == adminName) {
@@ -222,6 +243,8 @@ actor VoteSecure {
           var realVotersArr = [var];
           var polls = [];
           var pollNames = [];
+          description = desc;
+          date_created = date;
         };
         //generate unique ID for election record
         label getElectionID while true {
@@ -319,8 +342,11 @@ actor VoteSecure {
     return [];
   };
 
-  //authenticates voter based on electionID
-  func authenticateVoter(voterId: Nat, electionID : Nat): async Text {
+  //authenticates voter (for voter login)
+  //returns "Success" if voter authenticated
+  //returns "Fail" if voter not authenticated
+  //returns "ElectionID does not exist" if electionID does not exist
+  public func authenticateVoter(voterId: Nat, electionID : Nat): async Text {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
         let id = Array.find<Nat>(election.voterIDsArr, func x = x == voterId);
