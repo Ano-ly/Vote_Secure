@@ -1,7 +1,7 @@
 import Array "mo:base/Array";
+import Buffer "mo:base/Buffer";
 import Nat "mo:base/Nat";
 import Random "mo:base/Random";
-import Buffer "mo:base/Buffer";
 
 actor VoteSecure {
   //Type Candidate
@@ -11,7 +11,7 @@ actor VoteSecure {
     manifesto : Text;
     var no_of_votes : Nat;
   };
-  
+
   //Type Poll
   public type Poll = {
     position : Text;
@@ -31,7 +31,7 @@ actor VoteSecure {
     var polls : [Poll];
     var pollNames : [Text];
   };
-  
+
   //Type Admin
   public type Admin = {
     name : Text;
@@ -53,45 +53,58 @@ actor VoteSecure {
     return x == y;
   };
 
-  //generates random IDs
+  //generates a random ID
   func genRandID() : async Nat {
-    let seed = await Random.blob();
-    let random = Random.Finite(seed);
-    let optRandID = random.range(32);
-    let randID : Nat = switch (optRandID) {
-      case (?n) { n }; // extract Nat value if present
-      case (null) { 0 }; // default value if null
+    var ID = 0;
+    //change seed if randID is null
+    label genID while true {
+      let seed = await Random.blob();
+      let random = Random.Finite(seed);
+      let optRandID = random.range(32);
+      let randID : Nat = switch (optRandID) {
+        case (?n) { n }; // extract Nat value if present
+        case (null) { 0 }; // default value if null
+      };
+      if (randID == 0) {
+        continue genID;
+      } else {
+        ID := randID;
+        break genID;
+      };
     };
-    return randID;
+    return ID;
   };
 
   //gets list of emails and corresponding ids
+  //returns empty list if election with electionID does not exist
   public query func getEmailsnIDS(electionID : Nat) : async [(Text, Nat)] {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
         return Array.freeze(election.realVotersArr);
-      }; 
+      };
     };
     return [];
-  };   
+  };
 
   //sign up for admin
-  public func signup (name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async Text {
+  //Returns ("Success", "Nil") is successfully signed in
+  //Returns ("Fail", "<Error message>") if sign in failed
+  public func signup (name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async (Text, Text) {
     let isAdminCreated = await createAdmin(name, email, phoneNo, username, password);
     if (isAdminCreated == true) {
-      return "Successfully Signed In";
+      return ("Success", "Nil");
     } else {
-      return "SignUp failed. Try again";
+      return ("Fail", "Admin with username" # username # "exists");
     };
   };
 
-  //creates an Admin record
+  //creates an Admin record and persists to stable storage
   func createAdmin(name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async Bool {
     //check if username exists; username must be unique
     let OptUsrname = Array.find<Text>(ExistingUsernames, func x = x == username);
     let usrname = switch (OptUsrname) {
-      case(?n){n};
-      case(null){"Unique"};
+      case(?n){ n };
+      case(null){ "Unique" };
     };
     if (usrname == "Unique") {
       let newAdmin : Admin = {
@@ -102,7 +115,7 @@ actor VoteSecure {
         password = password;
         var elections = [];
       };
-      
+
       //add new admin to stable list of admins
       let ExAdminsBuff = Buffer.fromArray<Admin>(ExistingAdmins);
       let ExUsernamesBuff = Buffer.fromArray<Text>(ExistingUsernames);
@@ -116,12 +129,12 @@ actor VoteSecure {
       return false;
     };
   };
-  
-  //creates poll; 
+
+  //creates poll;
   //returns true if poll created
   //returns false if poll not created
   //sample input ("President", 344233322, [("CandidateA", "Manifesto: I will make the world a better place")])
-  func createPoll(pollName : Text, electionID : Nat, candidates : [(Text, Text)]) : Bool {
+  func createPoll(pollName : Text, electionID : Nat, candidates : [(Text, Text)]) : Text {
     for (election in ExistingElections.vals()) {
       let pollNamesBuff = Buffer.fromArray<Text>(election.pollNames);
       let pollsBuff = Buffer.fromArray<Poll>(election.polls);
@@ -129,7 +142,7 @@ actor VoteSecure {
       if (election.id == electionID) {
         //check if pollName (position) already exists in the election object
         if (Buffer.contains<Text>(pollNamesBuff, pollName, istextEqual)) {
-          return false;
+          return "Duplicate Poll Names";
         };
 
         //create new poll under an election
@@ -147,9 +160,9 @@ actor VoteSecure {
         for (candidate in candidates.vals()) {
           //check if candidate name already exists in poll
           if (Buffer.contains<Text>(candNamesBuff, candidate.0, istextEqual)) {
-            return false;
+            return "Duplicate candidate names";
           };
-    
+
           let newCand = {
             name = candidate.0;
             pollName = pollName;
@@ -165,36 +178,37 @@ actor VoteSecure {
         newPoll.candidates := Buffer.toArray<Candidate>(candsBuff);
         newPoll.candidateNames := Buffer.toArray<Text>(candNamesBuff);
 
-        //add the new poll to the list of polls in the election with electionID       
+        //add the new poll to the list of polls in the election with electionID
         pollsBuff.add(newPoll);
         pollNamesBuff.add(newPoll.position);
         election.polls := Buffer.toArray<Poll>(pollsBuff);
         election.pollNames := Buffer.toArray<Text>(pollNamesBuff);
-        return true;
+        return "Success";
       };
     };
-    return false;
+    return "ElectionID does not exist";
   };
 
   //public function: creates new election
-  public func createNewElection(adminName : Text, adminPass : Text, title : Text, pollList : [(Text, [(Text, Text)])]) : async Text {
+  public func createNewElection(adminName : Text, adminPass : Text, title : Text, pollList : [(Text, [(Text, Text)])]) : async (Text, Text) {
     for (admin in ExistingAdmins.vals()) {
       if (admin.username == adminName) {
         if (adminPass == admin.password) {
-          let electionReturn : Text = await createElection(title, pollList, adminName);
+          let electionReturn : (Text, Text) = await createElection(title, pollList, adminName);
           return electionReturn;
         } else {
-          return "Wrong Password";
+          return ("Fail", "Wrong Password");
         };
       };
     };
-    return "Username does not exist";
+    return ("Fail", "Username does not exist");
   };
 
   //creates new election (Note: named poll in frontend button)
   //sample pollList : [("President", [("CandidateA", "Manifesto: I will make the world a better place"), ("CandidateB", "Manifesto: I will make the world a better place")])]
-  //returns ID of new election or error text
-  func createElection(title : Text, pollList : [(Text, [(Text, Text)])], adminName : Text) : async Text {
+  //returns ("Success", <ID of new election>) if successful
+  //returns ("Fail", "<Error message>") if fail
+  func createElection(title : Text, pollList : [(Text, [(Text, Text)])], adminName : Text) : async (Text, Text) {
     for (admin in ExistingAdmins.vals()) {
       //if admin with username adminName found:
       if (admin.username == adminName) {
@@ -205,7 +219,7 @@ actor VoteSecure {
           title = title;
           adminName = adminName;
           var voterIDsArr = [];
-          var realVotersArr = [var];  
+          var realVotersArr = [var];
           var polls = [];
           var pollNames = [];
         };
@@ -235,23 +249,23 @@ actor VoteSecure {
 
         //create all polls (positions) associated with newelection
         for (poll in pollList.vals()) {
-          let isPollCreated : Bool = createPoll(poll.0, ElectionID, poll.1);
+          let pollCreateReturn : Text = createPoll(poll.0, ElectionID, poll.1);
           //remove all polls from election if a single poll fails (Note: Better handling will be incorporated at a later date)
-          if (isPollCreated != true) {
+          if (pollCreateReturn != "Success") {
             for (election in ExistingElections.vals()) {
               if (election.id == ElectionID) {
                 election.polls := [];
                 election.pollNames := [];
               };
             };
-            return "A poll failed";
+            return ("Fail", pollCreateReturn);
           };
         };
         let IDNat : Text = Nat.toText(newElection.id);
-        return IDNat;
+        return ("Success", IDNat);
       };
     };
-    return "Admin not found";
+    return ("Fail", "Admin not found");
   };
 
   //public function: registers voters
@@ -271,6 +285,7 @@ actor VoteSecure {
   };
 
   //registers voters
+  //returns empty list if election with electionID does not exist
   func registerVoters(voterInfo: [Text], electionID : Nat) : async [Nat] {
     for (election in ExistingElections.vals()){
       if (election.id == electionID) {
@@ -305,18 +320,18 @@ actor VoteSecure {
   };
 
   //authenticates voter based on electionID
-  func authenticateVoter(voterId: Nat, electionID : Nat): async Bool {
+  func authenticateVoter(voterId: Nat, electionID : Nat): async Text {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
         let id = Array.find<Nat>(election.voterIDsArr, func x = x == voterId);
         if (id != null) {
-          return true
+          return "Success"
         } else {
-          return false
+          return "Fail"
         };
       };
     };
-  return false;
+    return "ElectionID does not exist";
   };
 
   //casts and store votes
@@ -339,35 +354,42 @@ actor VoteSecure {
               };
               return "Success";
             } else {
-              return "Candidate Name does not exist for poll";
-            };         
+              return "Candidate Name does not exist";
+            };
           };
         };
-        return "Non-existent poll";         
+        return "Poll does not exist";
       };
     };
-    return "ElectionID non-existent";   
+    return "ElectionID does not exist";
   };
 
   //casts votes for all the polls in a particular election, for a single voterID
   //sample input: (33433, [(position1, "Candidate3"), (position2, "Candidate1")])
-  public func castOverallVote(voterID : Nat,  electionID : Nat, listOfVotes : [(Text, Text)]) : async Text{
-    let authStatus : Bool = await authenticateVoter(voterID, electionID);
-    if (authStatus == false) {
-      return "Unidentified Voter";
+  public func castOverallVote(voterID : Nat,  electionID : Nat, listOfVotes : [(Text, Text)]) : async (Text, Text){
+    let authStatus : Text = await authenticateVoter(voterID, electionID);
+    if (authStatus == "Fail") {
+      return ("Fail", "Unidentified Voter");
+    } else if (authStatus != "Success") {
+      return ("Fail", authStatus);
     } else {
       for (vote in listOfVotes.vals()) {
         let voteCastInfo = await castVote(vote.0, electionID, voterID, vote.1);
         if (voteCastInfo != "Success") {
-          return "An error occurred at" # vote.1;
+          return ("Fail", "An error occurred when casting vote for" # vote.0);
         };
       };
-      return "Votes Successfully Cast";
+      return ("Success", "Votes Successfully Cast");
     };
   };
 
   //retrieve votes stats
-  public query func getElectionStats(electionID : Nat): async Text {
+  /*sample return value: [("President", [("Candidate_A", 78), ("Candidate_B", 65)]),
+                      ("Vice President", [("Candidate_C", 77), ("Candidate_D", 44)])
+                    ]
+  */
+  //returns empty list if electionID does not exist 
+  public query func getElectionStats(electionID : Nat): async [(Text, [(Text, Nat)])] {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
         let electionStats = Buffer.Buffer<(Text, [(Text, Nat)])>(0);
@@ -378,9 +400,9 @@ actor VoteSecure {
           };
           electionStats.add((poll.position, Buffer.toArray(pollStats)));
         };
-        return debug_show(Buffer.toArray(electionStats));
+        return Buffer.toArray(electionStats);
       };
     };
-    return "Election with ID provided does not exist";
+    return [];
   };
 };
