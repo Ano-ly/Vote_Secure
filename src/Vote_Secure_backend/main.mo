@@ -4,6 +4,7 @@ import Nat "mo:base/Nat";
 
 import Types "./types";
 import Utils "./utils";
+import csvUpload "./csv_upload";
 
 
 actor VoteSecure {
@@ -165,6 +166,7 @@ actor VoteSecure {
           var realVotersArr = [var];
           var polls = [];
           var pollNames = [];
+          var alreadyVotedIDs = [];
           description = desc;
           date_created = date;
         };
@@ -257,9 +259,13 @@ actor VoteSecure {
       if (election.id == electionID) {
         let id = Array.find<Nat>(election.voterIDsArr, func x = x == voterId);
         if (id != null) {
-          return "Success"
+          let ID = Array.find<Nat>(election.alreadyVotedIDs, func x = x == voterId);
+          if (ID != null) {
+            return "Fail";
+          };
+          return "Success";
         } else {
-          return "Fail"
+          return "Fail";
         };
       };
     };
@@ -278,6 +284,9 @@ actor VoteSecure {
             //check if candidate is amongst the list of valid candidates
             if (Buffer.contains(pollCandNamesBuff, vote, Utils.istextEqual)) {
               votesBuff.add((voterID, vote));
+              let alVotedIDsBuff = Buffer.fromArray<Nat>(election.alreadyVotedIDs);
+              alVotedIDsBuff.add(voterID);
+              election.alreadyVotedIDs := Buffer.toArray<Nat>(alVotedIDsBuff);
               poll.votes := Buffer.toArray<(Nat, Text)>(votesBuff);
               for (candidate in poll.candidates.vals()) {
                 if (candidate.name == vote) {
@@ -338,6 +347,10 @@ actor VoteSecure {
     return [];
   };
 
+  //----------------------------
+  //The following functions are not required for frontend integration
+  //----------------------------
+
   //public function: registers voters
   //calls registerVoters(...)
   public func registerElectionVoters(adminName : Text, adminPass : Text, voterInfo: [Text], electionID : Nat) : async Text {
@@ -367,5 +380,17 @@ actor VoteSecure {
       };
     };
     return ("Fail", "Username does not exist");
+  };
+
+  //Returns "Success" if voters successfully registered
+  //Returns "ElectionID does not exist" if electionID does not exist
+  public func regVotersFromCsv(csvInfo : Text, electionID : Nat) : async (Text, [Nat]) {
+    let emailList = await csvUpload.uploadFromCsv(csvInfo);
+    let regInfo : [Nat] = await registerVoters(emailList, electionID);
+    if (Array.size(regInfo) == 0) {
+      return ("ElectionID does not exist", []);
+    } else {
+      return ("Success",regInfo);
+    };
   };
 };

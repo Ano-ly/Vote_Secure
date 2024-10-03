@@ -28,6 +28,7 @@ module {
     var realVotersArr : [var (Text, Nat)];
     var polls : [Poll];
     var pollNames : [Text];
+    var alreadyVotedIDs : [Nat];
   };
 
   //Type Admin
