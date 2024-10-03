@@ -1,83 +1,18 @@
 import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Nat "mo:base/Nat";
-import Random "mo:base/Random";
+
+import Types "./types";
+import Utils "./utils";
+
 
 actor VoteSecure {
-  //Type Candidate
-  public type Candidate = {
-    name : Text;
-    description : Text;
-    pollName : Text;
-    manifesto : Text;
-    var no_of_votes : Nat;
-  };
-
-  //Type Poll
-  public type Poll = {
-    position : Text;
-    electionID : Nat;
-    var votes : [(Nat, Text)];
-    var candidates : [Candidate];
-    var candidateNames : [Text];
-  };
-
-  //Type Election
-  public type Election = {
-    title : Text;
-    var id : Nat;
-    adminName : Text;
-    description : Text;
-    date_created : Text;
-    var voterIDsArr : [Nat];
-    var realVotersArr : [var (Text, Nat)];
-    var polls : [Poll];
-    var pollNames : [Text];
-  };
-
-  //Type Admin
-  public type Admin = {
-    name : Text;
-    email : Text;
-    phoneNo : Text;
-    username : Text;
-    password : Text;
-    var elections : [Election];
-  };
-
   //stable variables to store existing admins, elections, election IDs and usernames
-  stable var ExistingAdmins : [Admin] = [];
-  stable var ExistingElections : [Election] = [];
+  stable var ExistingAdmins : [Types.Admin] = [];
+  stable var ExistingElections : [Types.Election] = [];
   stable var ExistingElectionIDs : [Nat] = [];
   stable var ExistingUsernames : [Text] = [];
-
-  //checks the equality of two text values or strings
-  func istextEqual(x : Text, y : Text) : Bool{
-    return x == y;
-  };
-
-  //generates a random ID
-  func genRandID() : async Nat {
-    var ID = 0;
-    //change seed if randID is null
-    label genID while true {
-      let seed = await Random.blob();
-      let random = Random.Finite(seed);
-      let optRandID = random.range(32);
-      let randID : Nat = switch (optRandID) {
-        case (?n) { n }; // extract Nat value if present
-        case (null) { 0 }; // default value if null
-      };
-      if (randID == 0) {
-        continue genID;
-      } else {
-        ID := randID;
-        break genID;
-      };
-    };
-    return ID;
-  };
-
+  
   //gets list of emails and corresponding ids
   //returns empty list if election with electionID does not exist
   public query func getEmailsnIDS(electionID : Nat) : async [(Text, Nat)] {
@@ -127,7 +62,7 @@ actor VoteSecure {
       case(null){ "Unique" };
     };
     if (usrname == "Unique") {
-      let newAdmin : Admin = {
+      let newAdmin : Types.Admin = {
         name = name;
         email = email;
         phoneNo = phoneNo;
@@ -137,7 +72,7 @@ actor VoteSecure {
       };
 
       //add new admin to stable list of admins
-      let ExAdminsBuff = Buffer.fromArray<Admin>(ExistingAdmins);
+      let ExAdminsBuff = Buffer.fromArray<Types.Admin>(ExistingAdmins);
       let ExUsernamesBuff = Buffer.fromArray<Text>(ExistingUsernames);
       ExAdminsBuff.add(newAdmin);
       ExUsernamesBuff.add(username);
@@ -157,16 +92,16 @@ actor VoteSecure {
   func createPoll(pollName : Text, electionID : Nat, candidates : [(Text, Text, Text)]) : Text {
     for (election in ExistingElections.vals()) {
       let pollNamesBuff = Buffer.fromArray<Text>(election.pollNames);
-      let pollsBuff = Buffer.fromArray<Poll>(election.polls);
+      let pollsBuff = Buffer.fromArray<Types.Poll>(election.polls);
 
       if (election.id == electionID) {
         //check if pollName (position) already exists in the election object
-        if (Buffer.contains<Text>(pollNamesBuff, pollName, istextEqual)) {
+        if (Buffer.contains<Text>(pollNamesBuff, pollName, Utils.istextEqual)) {
           return "Duplicate Poll Names";
         };
 
         //create new poll under an election
-        let newPoll : Poll = {
+        let newPoll : Types.Poll = {
           electionID = electionID;
           position = pollName;
           var votes = [];
@@ -175,11 +110,11 @@ actor VoteSecure {
         };
 
         let candNamesBuff = Buffer.fromArray<Text>(newPoll.candidateNames);
-        let candsBuff = Buffer.fromArray<Candidate>(newPoll.candidates);
+        let candsBuff = Buffer.fromArray<Types.Candidate>(newPoll.candidates);
 
         for (candidate in candidates.vals()) {
           //check if candidate name already exists in poll
-          if (Buffer.contains<Text>(candNamesBuff, candidate.0, istextEqual)) {
+          if (Buffer.contains<Text>(candNamesBuff, candidate.0, Utils.istextEqual)) {
             return "Duplicate candidate names";
           };
 
@@ -196,13 +131,13 @@ actor VoteSecure {
           candNamesBuff.add(newCand.name);
         };
         //reassign the array equivalent of updated buffers to the list of candidates and candidate names in new poll
-        newPoll.candidates := Buffer.toArray<Candidate>(candsBuff);
+        newPoll.candidates := Buffer.toArray<Types.Candidate>(candsBuff);
         newPoll.candidateNames := Buffer.toArray<Text>(candNamesBuff);
 
         //add the new poll to the list of polls in the election with electionID
         pollsBuff.add(newPoll);
         pollNamesBuff.add(newPoll.position);
-        election.polls := Buffer.toArray<Poll>(pollsBuff);
+        election.polls := Buffer.toArray<Types.Poll>(pollsBuff);
         election.pollNames := Buffer.toArray<Text>(pollNamesBuff);
         return "Success";
       };
@@ -210,20 +145,7 @@ actor VoteSecure {
     return "ElectionID does not exist";
   };
 
-  //public function: creates new election
-  public func createNewElection(date : Text, adminName : Text, adminPass : Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])]) : async (Text, Text) {
-    for (admin in ExistingAdmins.vals()) {
-      if (admin.username == adminName) {
-        if (adminPass == admin.password) {
-          let electionReturn : (Text, Text) = await createElection(date, title, desc, pollList, adminName);
-          return electionReturn;
-        } else {
-          return ("Fail", "Wrong Password");
-        };
-      };
-    };
-    return ("Fail", "Username does not exist");
-  };
+  
 
   //creates new election (Note: named poll in frontend button)
   //sample pollList : [("President", [("CandidateA", "Manifesto: I will make the world a better place"), ("CandidateB", "Manifesto: I will make the world a better place")])]
@@ -235,7 +157,7 @@ actor VoteSecure {
       if (admin.username == adminName) {
         var ElectionID = 0;
         //initialise new election record
-        var newElection : Election = {
+        var newElection : Types.Election = {
           var id = 0;
           title = title;
           adminName = adminName;
@@ -248,7 +170,7 @@ actor VoteSecure {
         };
         //generate unique ID for election record
         label getElectionID while true {
-          let newID = await genRandID();
+          let newID = await Utils.genRandID();
           if (Array.find<Nat>(ExistingElectionIDs, func x = x == newID) != null) {
             continue getElectionID;
           } else {
@@ -258,17 +180,17 @@ actor VoteSecure {
           };
         };
         //add election record and electionID to existing stable lists
-        let ExElectionsBuff = Buffer.fromArray<Election>(ExistingElections);
+        let ExElectionsBuff = Buffer.fromArray<Types.Election>(ExistingElections);
         let ExElectionIDsBuff = Buffer.fromArray<Nat>(ExistingElectionIDs);
         ExElectionsBuff.add(newElection);
         ExElectionIDsBuff.add(newElection.id);
-        ExistingElections := Buffer.toArray<Election>(ExElectionsBuff);
+        ExistingElections := Buffer.toArray<Types.Election>(ExElectionsBuff);
         ExistingElectionIDs := Buffer.toArray<Nat>(ExElectionIDsBuff);
 
         //add new election to list of elections in the associated Admin record
-        let adminElectionsBuff = Buffer.fromArray<Election>(admin.elections);
+        let adminElectionsBuff = Buffer.fromArray<Types.Election>(admin.elections);
         adminElectionsBuff.add(newElection);
-        admin.elections := Buffer.toArray<Election>(adminElectionsBuff);
+        admin.elections := Buffer.toArray<Types.Election>(adminElectionsBuff);
 
         //create all polls (positions) associated with newelection
         for (poll in pollList.vals()) {
@@ -291,25 +213,9 @@ actor VoteSecure {
     return ("Fail", "Admin not found");
   };
 
-  //public function: registers voters
-  //calls registerVoters(...)
-  public func registerElectionVoters(adminName : Text, adminPass : Text, voterInfo: [Text], electionID : Nat) : async Text {
-    for (admin in ExistingAdmins.vals()) {
-      if (admin.username == adminName) {
-        if (adminPass == admin.password) {
-          let regVReturnVal : [Nat] = await registerVoters(voterInfo, electionID);
-          return "Voters Successfully Registered" # debug_show(regVReturnVal);
-        } else {
-          return "Wrong Password";
-        };
-      };
-    };
-    return "Username does not exist";
-  };
-
   //registers voters
   //returns empty list if election with electionID does not exist
-  func registerVoters(voterInfo: [Text], electionID : Nat) : async [Nat] {
+  public func registerVoters(voterInfo: [Text], electionID : Nat) : async [Nat] {
     for (election in ExistingElections.vals()){
       if (election.id == electionID) {
         let numValidVoters = Array.size(voterInfo);
@@ -320,7 +226,7 @@ actor VoteSecure {
         while (i < numValidVoters) {
           //while loop to ensure generated ID does not already exist
           label getUniqID while true {
-            let newID = await genRandID();
+            let newID = await Utils.genRandID();
             let isNotUniq = Buffer.contains<Nat>(voterIDs, newID, Nat.equal);
             if (isNotUniq == false) {
               realVoters.add((voterInfo[i], newID));
@@ -370,7 +276,7 @@ actor VoteSecure {
             let votesBuff = Buffer.fromArray<(Nat, Text)>(poll.votes);
             let pollCandNamesBuff = Buffer.fromArray<Text>(poll.candidateNames);
             //check if candidate is amongst the list of valid candidates
-            if (Buffer.contains(pollCandNamesBuff, vote, istextEqual)) {
+            if (Buffer.contains(pollCandNamesBuff, vote, Utils.istextEqual)) {
               votesBuff.add((voterID, vote));
               poll.votes := Buffer.toArray<(Nat, Text)>(votesBuff);
               for (candidate in poll.candidates.vals()) {
@@ -430,5 +336,36 @@ actor VoteSecure {
       };
     };
     return [];
+  };
+
+  //public function: registers voters
+  //calls registerVoters(...)
+  public func registerElectionVoters(adminName : Text, adminPass : Text, voterInfo: [Text], electionID : Nat) : async Text {
+    for (admin in ExistingAdmins.vals()) {
+      if (admin.username == adminName) {
+        if (adminPass == admin.password) {
+          let regVReturnVal : [Nat] = await registerVoters(voterInfo, electionID);
+          return "Voters Successfully Registered" # debug_show(regVReturnVal);
+        } else {
+          return "Wrong Password";
+        };
+      };
+    };
+    return "Username does not exist";
+  };
+
+  //public function: creates new election
+  public func createNewElection(date : Text, adminName : Text, adminPass : Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])]) : async (Text, Text) {
+    for (admin in ExistingAdmins.vals()) {
+      if (admin.username == adminName) {
+        if (adminPass == admin.password) {
+          let electionReturn : (Text, Text) = await createElection(date, title, desc, pollList, adminName);
+          return electionReturn;
+        } else {
+          return ("Fail", "Wrong Password");
+        };
+      };
+    };
+    return ("Fail", "Username does not exist");
   };
 };
