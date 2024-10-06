@@ -13,7 +13,7 @@ actor VoteSecure {
   stable var ExistingElections : [Types.Election] = [];
   stable var ExistingElectionIDs : [Nat] = [];
   stable var ExistingUsernames : [Text] = [];
-  
+
   //gets list of emails and corresponding ids
   //returns empty list if election with electionID does not exist
   public query func getEmailsnIDS(electionID : Nat) : async [(Text, Nat)] {
@@ -146,7 +146,7 @@ actor VoteSecure {
     return "ElectionID does not exist";
   };
 
-  
+
 
   //creates new election (Note: named poll in frontend button)
   //sample pollList : [("President", [("CandidateA", "Manifesto: I will make the world a better place"), ("CandidateB", "Manifesto: I will make the world a better place")])]
@@ -329,7 +329,7 @@ actor VoteSecure {
                       ("Vice President", [("Candidate_C", 77), ("Candidate_D", 44)])
                     ]
   */
-  //returns empty list if electionID does not exist 
+  //returns empty list if electionID does not exist
   public query func getElectionStats(electionID : Nat): async [(Text, [(Text, Nat)])] {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
@@ -345,6 +345,70 @@ actor VoteSecure {
       };
     };
     return [];
+  };
+
+  //Returns "Success" if voters successfully registered
+  //Returns "ElectionID does not exist" if electionID does not exist
+  public func regVotersFromCsv(csvInfo : Text, electionID : Nat) : async (Text, [Nat]) {
+    let emailList = await csvUpload.uploadFromCsv(csvInfo);
+    let regInfo : [Nat] = await registerVoters(emailList, electionID);
+    if (Array.size(regInfo) == 0) {
+      return ("ElectionID does not exist", []);
+    } else {
+      return ("Success",regInfo);
+    };
+  };
+
+  //gets the names of candidates from a poll
+  /* sample return value if successfull: (
+    "Success", 
+    "Nil",
+    ["Candidate_A", "Candidate_B","Candidate_C"]
+  )
+  sample return value if fail: (
+    "Fail", 
+    "<Error message>",
+    []
+  )
+  */
+  public func getPollCandidates(electionID : Nat, pollName : Text) : async (Text, Text, [Text]) {
+    for (election in ExistingElections.vals()) {
+      if (election.id == electionID) {
+        for (poll in election.polls.vals()) {
+          if (poll.position == pollName) {
+            return ("Success", "Nil", poll.candidateNames);
+          };
+        };
+        return ("Fail", "Position does not exist", [])
+      };
+    };
+    return ("Fail", "ElectionID does not exist", []);
+  };
+
+  //gets the names of candidates from all polls under an election
+  /* sample return value if successfull: (
+    "Success", 
+    "Nil",
+    [("President", ["Candidate_A", "Candidate_B"]),
+      ("Vice President", ["Candidate_C", "Candidate_D])]
+  )
+  sample return value if fail: (
+    "Fail", 
+    "<Error message>",
+    []
+  )
+  */
+  public func getCandidates(electionID : Nat) : async (Text, Text, [(Text, [Text])]) {
+    for (election in ExistingElections.vals()) {
+      if (election.id == electionID) {
+        let pollandNames = Buffer.Buffer<(Text, [Text])>(0);
+        for (poll in election.polls.vals()) {
+          pollandNames.add(poll.position, poll.candidateNames);
+        };
+        return ("Success", "Nil", Buffer.toArray<(Text, [Text])>(pollandNames));
+      };
+    };
+    return ("Fail", "ElectionID does not exist", []);
   };
 
   //----------------------------
@@ -381,16 +445,5 @@ actor VoteSecure {
     };
     return ("Fail", "Username does not exist");
   };
-
-  //Returns "Success" if voters successfully registered
-  //Returns "ElectionID does not exist" if electionID does not exist
-  public func regVotersFromCsv(csvInfo : Text, electionID : Nat) : async (Text, [Nat]) {
-    let emailList = await csvUpload.uploadFromCsv(csvInfo);
-    let regInfo : [Nat] = await registerVoters(emailList, electionID);
-    if (Array.size(regInfo) == 0) {
-      return ("ElectionID does not exist", []);
-    } else {
-      return ("Success",regInfo);
-    };
-  };
 };
+
