@@ -1,30 +1,42 @@
-import { useState } from 'react';
-import { Vote_Secure_backend } from 'declarations/Vote_Secure_backend';
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { NextUIProvider } from "@nextui-org/react";
+import {Dashboard,
+        Pollcreation, 
+        AddCandidates, 
+        Csvupload,
+        VotingManagement1,
+        VotingManagement2,} from './pages/dashboard';
+import {
+  Home,
+  Login,
+  Adminsignup,
+  Sharedlayout,
+  Voterlogin,
+  Votingpage,
+
+} from "./pages";
 
 function App() {
-  const [greeting, setGreeting] = useState('');
-
-  function handleSubmit(event) {
-    event.preventDefault();
-    const name = event.target.elements.name.value;
-    Vote_Secure_backend.greet(name).then((greeting) => {
-      setGreeting(greeting);
-    });
-    return false;
-  }
-
   return (
-    <main>
-      <img src="/logo2.svg" alt="DFINITY logo" />
-      <br />
-      <br />
-      <form action="#" onSubmit={handleSubmit}>
-        <label htmlFor="name">Enter your name: &nbsp;</label>
-        <input id="name" alt="Name" type="text" />
-        <button type="submit">Click Me!</button>
-      </form>
-      <section id="greeting">{greeting}</section>
-    </main>
+    <NextUIProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Sharedlayout />}>
+            <Route index element={<Home />} />
+            <Route path="login" element={<Login />} />
+            <Route path="adminsignup" element={<Adminsignup />} />
+            <Route path="voterlogin" element={<Voterlogin />} />
+            <Route path="votingpage" element={<Votingpage />} />
+            <Route path="votingm1" element={<VotingManagement1 />} />
+            <Route path="votingm2" element={<VotingManagement2 />} />
+            <Route path='dashboard' element={<Dashboard/>}/>
+            <Route path='pollcreation' element={<Pollcreation/>}/>
+            <Route path='addcandidates' element={<AddCandidates/>}/>
+            <Route path='csvupload' element={<Csvupload/>}/>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </NextUIProvider>
   );
 }
 
