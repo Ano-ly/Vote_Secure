@@ -12,7 +12,8 @@
         "src/Vote_Secure_frontend/dist"
       ],
       "type": "assets",
-      "workspace": "Vote_Secure_frontend"
+      "workspace": "Vote_Secure_frontend",
+      "build": "npm run build"
     }
   },
   "defaults": {

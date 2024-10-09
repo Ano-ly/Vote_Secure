@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Apply Open Sans globally */
+@layer base {
+  body {
+    @apply font-sans; /* Apply the Open Sans font */
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    background-image: linear-gradient(to right, #002066, #75769b, #ffffff);
+    background-clip: text;
+    color: transparent;
+  }
+  .main-hero-bg {
+    background-image: linear-gradient(#001646, #191919);
+  }
+
+  .input {
+    background-color: #37456580;
+  }
+  .container-r {
+    min-height: 100vh;
+  }
+  .vpage {
+    background: #10141F;
+  }
+}
+
+/* Use Open Sans as the primary font */
+:root {
+  font-family: 'Open Sans', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.card {
+  transform: scale(0.8); /* Default scale for non-centered cards */
+}
+
+.slick-center .card {
+  transform: scale(1); /* Scale to normal for the centered card */
+}
+
+.hide-scrollbar {
+  overflow: hidden; /* Hide the scrollbar */
+  scrollbar-width: none; /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+a {
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+main {
+  min-height: 100vh; 
+}
+
+.container-r{
+  min-height: 100vh ;
+}
+
+.dropdown-container {
+  display: inline-block; 
+  border: 2px solid white;  
+  border-radius: 5px;
+  padding: 0px 10px;
+}
+
+.dropdown-trigger {
+  cursor: pointer; /* Change cursor to pointer on hover */
+  color: white; /* Ensure the text color is white */
+  padding: 5px 10px; /* Padding inside the dropdown trigger */
+  background-color: transparent; /* Make background transparent */
+}
+
+.dropdown-trigger:hover {
+  background-color: rgba(255, 255, 255, 0.2); /* Optional: highlight on hover */
+}
