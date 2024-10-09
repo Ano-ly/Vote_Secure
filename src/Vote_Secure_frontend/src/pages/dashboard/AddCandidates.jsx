@@ -251,8 +251,8 @@ const AddCandidates = () => {
                 </div>
 
                 {/* Candidate Input Form */}
-                <div className='bg-footer_t flex-1 w-full h-full mb pb-7 lg:w-5/6 rounded-lg lg:py-10 sm:py-14 sm:px-14 lg:px-24 flex flex-col gap-8'>
-                    <p className='text-center text-white text-opacity-40 text-sm'>Please add the Candidates for each Position</p>
+                <div className='bg-footer_t flex-1 w-full h-full px-5 pb-7 lg:w-5/6 rounded-lg lg:py-10 sm:py-14 sm:px-14 lg:px-24 flex flex-col gap-8'>
+                    <p className='text-center text-white text-opacity-40 text-sm py-5'>Please add the Candidates for each Position</p>
                     <p className='text-white lg:text-base text-sm px-5 pt-5'>Input list of candidates</p>
 
                     {positions.length > 0 ? (
@@ -350,25 +350,15 @@ const AddCandidates = () => {
                     )}
 
                     {/* Proceed button */}
-                    <div className='w-1/6'>
-                        <Button
-                            className='my-7 w-full'
-                            size='large'
-                            type='primary'
-                            onClick={handleSubmit} // Call the submit function on click
-                        >
-                            Proceed
-                        </Button>
-                    </div>
-                    <div className='w-1/6'>
+                    <div className='lg:w-1/6 w-1/3'>
                     <Link to={'/Csvupload'} className='w-full'>
                     <Button
-                            className='my-7 w-full'
+                            className='my-7 text-sm w-full'
                             size='large'
                             type='primary'
                             
                         >
-                            Dummy Proceed
+                            Proceed
                         </Button>
                     </Link>
                         

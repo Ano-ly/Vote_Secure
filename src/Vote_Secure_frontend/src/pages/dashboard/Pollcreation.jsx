@@ -61,7 +61,7 @@ const handleSubmit = () => {
         </div>
 
         {/* Poll content */}
-        <div className='bg-footer_t flex-1 w-5/6 rounded-lg py-24 px-24 flex flex-col gap-5'>
+        <div className='bg-footer_t flex-1 lg:w-5/6 w-full rounded-lg py-24 px-5 lg:px-24 flex flex-col gap-5'>
           <div className='flex flex-col gap-3'>
             <p className='text-white'>Title</p>
             <Input
@@ -115,7 +115,7 @@ const handleSubmit = () => {
             </a>
 
             <Button
-              className='my-7 w-1/6'
+              className='my-7 w-1/3 lg:w-1/6'
               size='large'
               type='primary'
               onClick={handleSubmit} // Handle form submission

@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import Biometric from "../../public/assets/Biometric.png";
 import backarrow from "../../public/assets/backarrow.png";
 import { Link, useNavigate } from "react-router-dom";
-import { Vote_Secure_backend } from "../../../declarations/Vote_Secure_backend";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,22 +15,22 @@ const Login = () => {
     e.preventDefault(); // Prevent form submission
     console.log("Submitting login form...");
 
-    try {
-      console.log(`Trying to authenticate with username: ${username}`);
-      const result = await Vote_Secure_backend.authenticateAdmin(username, password);
-      console.log("Authentication result:", result);
-
-      if (result === "Success") {
-        setSuccessMessage("Login successful!");
-        navigate('/dashboard'); // Redirect to the dashboard
-      } else {
-        setErrorMessage(result);
-        setSuccessMessage("");
-      }
-    } catch (error) {
-      console.error("Error during authentication:", error);
-      setErrorMessage("An error occurred. Please try again.");
+    // Simple validation (you can add more complex validation if needed)
+    if (!username || !password) {
+      setErrorMessage("Please fill in both fields.");
+      return;
     }
+
+    // Clear the error message
+    setErrorMessage("");
+
+    // Optionally, you can add logic here to validate login credentials, e.g., making an API call
+
+    // If successful, set success message and navigate to the dashboard
+    setSuccessMessage("Login successful!");
+
+    // Navigate to dashboard and pass the username
+    navigate("/dashboard", { state: { username } });
   };
 
   return (
@@ -39,7 +38,7 @@ const Login = () => {
       <Link to="/">
         <img
           src={backarrow}
-          alt=""
+          alt="Back"
           className="absolute w-8 left-5 top-6 cursor-pointer"
         />
       </Link>
@@ -47,7 +46,7 @@ const Login = () => {
       <div className="bg-main_bg_color container-r flex flex-col items-center justify-center text-center p-14 md:pt-16 ">
         {/* the main login div */}
         <div className="flex flex-col items-center md:w-2/4">
-          <img src={Biometric} alt="" className="w-9 mb-5 md:w-11" />
+          <img src={Biometric} alt="Biometric" className="w-9 mb-5 md:w-11" />
           <h1 className="text-white text-xl font-bold mb-4 md:text-2xl">Login</h1>
           <p className="text-gray-500 text-base max-w-96 leading-tight mb-6 ">
             Secure access to the admin dashboard for election creation and management
@@ -80,10 +79,15 @@ const Login = () => {
           {successMessage && <p className="text-green-500">{successMessage}</p>}
 
           <div className="w-full flex justify-between mt-3 text-sm">
-            <Link className="border py-2 px-6 border-primary_blue text-gray-500 cursor-pointer transition duration-200 hover:border-white hover:text-white md:text-base md:px-8" to={'/adminsignup'}>
+            <Link
+              className="border py-2 px-6 border-primary_blue text-gray-500 cursor-pointer transition duration-200 hover:border-white hover:text-white md:text-base md:px-8"
+              to={'/adminsignup'}
+            >
               Sign up
             </Link>
-            <a href="" className="flex justify-end items-end">Forgot password?</a>
+            <a href="" className="flex justify-end items-end">
+              Forgot password?
+            </a>
           </div>
         </div>
       </div>

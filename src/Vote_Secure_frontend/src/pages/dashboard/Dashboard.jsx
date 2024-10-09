@@ -6,26 +6,37 @@ import abstract from '/assets/Abstract.png';
 import profilepic from '/assets/ProfilePic.png';
 import { Link } from 'react-router-dom';
 import { Divider } from 'antd';
+import { useLocation } from 'react-router-dom';
+
 
 const items = [
     {
-        label: <a href="https://www.antgroup.com">1st menu item</a>,
+        label: <a>ShowCase Election 1</a>,
         key: '0',
     },
     {
-        label: <a href="https://www.aliyun.com">2nd menu item</a>,
+        label: <a></a>,
         key: '1',
     },
     {
         type: 'divider',
     },
     {
-        label: '3rd menu item',
+        label: 'Drafts',
         key: '3',
     },
 ];
 
 const Dashboard = () => {
+    const location = useLocation();
+    const { username } = location.state || {};
+
+
+
+
+
+
+
     return (
         <main className='bg-main_bg_color container-r flex pb-9'>
             <div className='w-1/5 lg:w-1/6 sm:w-1/6'>
@@ -49,7 +60,7 @@ const Dashboard = () => {
                                 <img src="" alt="" />
                                 <div className='dropdown-container'>
                                     <Dropdown menu={{ items }} trigger={['click']}>
-                                        <p className='text-white rounded-lg dropdown-trigger' onClick={(e) => e.preventDefault()}>
+                                        <p className='text-white lg:text-base text-sm rounded-lg dropdown-trigger' onClick={(e) => e.preventDefault()}>
                                             <Space>
                                                 Created
                                             </Space>
@@ -67,7 +78,7 @@ const Dashboard = () => {
                         <div className='text-white text-opacity-40'>
                             <div className='flex gap-2'>
                                 <p>Name: </p>
-                                <p>David Kehinde</p>
+                                {username &&<p>{username}!</p>}
                             </div>
                             <div className='flex gap-2'>
                                 <p>Current Plan: </p>
@@ -80,8 +91,8 @@ const Dashboard = () => {
                 {/* Poll Table */}
                 <div className='px-5 py-3 mx-5 my-5 h-full rounded-lg flex-1 bg-footer_t flex flex-col'>
                     <p className='text-white text-opacity-40'>Polls Created</p>
-                    <div className='text-white lg:text-sm px-1 py-4'>
-                        <p>Mechanical engineering  departmental election</p>
+                    <div className='text-white text-sm lg:text-sm px-1 py-4'>
+                        <p>ShowCase Election 1</p>
 
                         <Divider style={{borderColor: '#002066',}}></Divider>
                     </div>

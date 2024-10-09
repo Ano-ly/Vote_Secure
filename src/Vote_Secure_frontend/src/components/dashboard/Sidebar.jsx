@@ -65,10 +65,14 @@ const Sidebar = () => {
           <img className='sm:w-6 w-5' src={settings} alt="Settings Icon" />
           <p className='lg:flex hidden text-sm'>Settings</p>
         </button>
-        <button className='flex items-center hover:bg-main_bg_color p-2 focus:bg-main_bg_color rounded-lg gap-3'>
+        <Link to={'/'} 
+        className='flex items-center hover:bg-main_bg_color p-2 focus:bg-main_bg_color rounded-lg gap-3'>
+        
           <img className='sm:w-6 w-5' src={logout} alt="Logout Icon" />
-          <p className='lg:flex hidden text-sm'>Logout</p>
-        </button>
+          <p className='lg:flex hidden text-white text-opacity-40 text-sm'>Logout</p>
+
+        </Link>
+        
       </div>
     </div>
   );

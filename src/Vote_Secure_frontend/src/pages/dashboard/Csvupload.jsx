@@ -2,12 +2,18 @@ import React, { useState } from 'react';
 import Nav2 from '../../components/dashboard/Nav2';
 import { InboxOutlined } from '@ant-design/icons';
 import { message, Upload, Spin, Button } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 import biometric from '/assets/Biometric.webp';
 
 const { Dragger } = Upload;
 
 const Csvupload = () => {
+  const navigate = useNavigate();
+
+
+
+
+
   const [uploading, setUploading] = useState(false); // For showing the loading container
   const [uploaded, setUploaded] = useState(false);   // For showing the success container
   const [fileSubmitted, setFileSubmitted] = useState(true); // For showing/hiding the CSV upload container
@@ -72,8 +78,9 @@ const Csvupload = () => {
   };
 
   const handleFileSubmit = () => {
-    setFileSubmitted(false);  // Hide CSV upload container
-    setUploading(true);       // Show loading spinner
+    // setFileSubmitted(false);  // Hide CSV upload container
+    // setUploading(true);       // Show loading spinner
+    navigate("/dashboard");
   };
 
   return (
