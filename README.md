@@ -1,6 +1,6 @@
 # `Vote_Secure`
 
-![Votesecure voting process](/Vote_Secure/blob/main/src/Vote_Secure_frontend/public/assets/votingsteps.png)
+![Votesecure voting process](/src/Vote_Secure_frontend/public/assets/votingsteps.png)
 
 ## Running the project locally
 
