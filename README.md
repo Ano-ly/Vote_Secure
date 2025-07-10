@@ -8,7 +8,7 @@ We’re a focused, experienced team from Tesseract Studios, bringing together ba
 
 ### Core team members include:
 
-Benjamin John – Team Lead / Backend (Motoko)
+- Benjamin John – Team Lead / Backend (Motoko)
 
 Amarachi Uvere – Backend Developer / Smart Contracts
 
