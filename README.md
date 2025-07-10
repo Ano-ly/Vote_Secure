@@ -1,4 +1,4 @@
-# `Vote_Secure`
+# `Votesecure`
 
 ![Votesecure voting process](/src/Vote_Secure_frontend/public/assets/votingsteps.png)
 
@@ -25,11 +25,11 @@ Many elections — from DAOs to student governments — still depend on insecure
 
 This leads to:
 
-Low voter trust due to unverifiable results
+- Low voter trust due to unverifiable results
 
-No transparency or tamper-proof audit trails
+- No transparency or tamper-proof audit trails
 
-Poor scalability for decentralized teams, schools, and communities
+- Poor scalability for decentralized teams, schools, and communities
 
 VoteSecure was created to solve this.
 
@@ -41,18 +41,12 @@ VoteSecure was created to solve this.
 
 It provides:
 
-Admin-created elections with full access control
-
-Secure CSV-based voter database upload
-
-Automatic generation of anonymous voter IDs
-
-Email delivery of credentials
-
-Real-time voting and transparent result viewing
-
-No gas fees or centralized backend
-
+- Admin-created elections with full access control
+- Secure CSV-based voter database upload
+- Automatic generation of anonymous voter IDs
+- Email delivery of credentials
+- Real-time voting and transparent result viewing
+- No gas fees or centralized backend
 
 It’s fast, accessible, and tamper-proof — everything a secure election platform should be.
 
