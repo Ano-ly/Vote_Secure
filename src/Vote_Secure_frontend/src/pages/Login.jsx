@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import Biometric from "../../public/assets/Biometric.png";
 import backarrow from "../../public/assets/backarrow.png";
 import { Link, useNavigate } from "react-router-dom";
+import { backendActorPromise } from "../utils/backend";
+
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,47 +14,33 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent form submission
-    console.log("Submitting login form...");
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Simple validation (you can add more complex validation if needed)
-    if (!username || !password) {
-      setErrorMessage("Please fill in both fields.");
-      return;
-    }
+  const backendActor = await backendActorPromise;
 
-    // Clear the error message
-    setErrorMessage("");
-
-    // Optionally, you can add logic here to validate login credentials, e.g., making an API call
-
-    // If successful, set success message and navigate to the dashboard
-    setSuccessMessage("Login successful!");
-
-    // Navigate to dashboard and pass the username
-    navigate("/dashboard", { state: { username } });
-  };
+  try {
+    const response = await backendActor.authenticateAdmin(username, password);
+    console.log("Backend Response:", response);
+    // Handle response logic
+  } catch (error) {
+    console.error("Error authenticating admin:", error);
+  }
+};
 
   return (
     <div className="relative container-r">
       <Link to="/">
-        <img
-          src={backarrow}
-          alt="Back"
-          className="absolute w-8 left-5 top-6 cursor-pointer"
-        />
+        <img src={backarrow} alt="Back" className="absolute w-8 left-5 top-6 cursor-pointer" />
       </Link>
 
       <div className="bg-main_bg_color container-r flex flex-col items-center justify-center text-center p-14 md:pt-16 ">
-        {/* the main login div */}
         <div className="flex flex-col items-center md:w-2/4">
           <img src={Biometric} alt="Biometric" className="w-9 mb-5 md:w-11" />
           <h1 className="text-white text-xl font-bold mb-4 md:text-2xl">Login</h1>
           <p className="text-gray-500 text-base max-w-96 leading-tight mb-6 ">
             Secure access to the admin dashboard for election creation and management
           </p>
-          {/* inputs */}
           <form className="flex flex-col border-none gap-4 w-full" onSubmit={handleSubmit}>
             <input
               type="text"

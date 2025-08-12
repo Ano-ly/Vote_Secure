@@ -55,7 +55,7 @@ actor VoteSecure {
   };
 
   //creates an Admin record and persists to stable storage
-  func createAdmin(name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async Bool {
+  public func createAdmin(name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async Bool {
     //check if username exists; username must be unique
     let OptUsrname = Array.find<Text>(ExistingUsernames, func x = x == username);
     let usrname = switch (OptUsrname) {
@@ -90,7 +90,7 @@ actor VoteSecure {
   //returns true if poll created
   //returns false if poll not created
   //sample input ("President", 344233322, [("CandidateA", "Manifesto: I will make the world a better place")])
-  func createPoll(pollName : Text, electionID : Nat, candidates : [(Text, Text, Text)]) : Text {
+  public func createPoll(pollName : Text, electionID : Nat, candidates : [(Text, Text, Text)]) : async Text {
     for (election in ExistingElections.vals()) {
       let pollNamesBuff = Buffer.fromArray<Text>(election.pollNames);
       let pollsBuff = Buffer.fromArray<Types.Poll>(election.polls);
@@ -152,7 +152,7 @@ actor VoteSecure {
   //sample pollList : [("President", [("CandidateA", "Manifesto: I will make the world a better place"), ("CandidateB", "Manifesto: I will make the world a better place")])]
   //returns ("Success", <ID of new election>) if successful
   //returns ("Fail", "<Error message>") if fail
-  func createElection(date: Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])], adminName : Text) : async (Text, Text) {
+  public func createElection(date: Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])], adminName : Text) : async (Text, Text) {
     for (admin in ExistingAdmins.vals()) {
       //if admin with username adminName found:
       if (admin.username == adminName) {
@@ -196,7 +196,7 @@ actor VoteSecure {
 
         //create all polls (positions) associated with newelection
         for (poll in pollList.vals()) {
-          let pollCreateReturn : Text = createPoll(poll.0, ElectionID, poll.1);
+          let pollCreateReturn : Text = await createPoll(poll.0, ElectionID, poll.1);
           //remove all polls from election if a single poll fails (Note: Better handling will be incorporated at a later date)
           if (pollCreateReturn != "Success") {
             for (election in ExistingElections.vals()) {
@@ -273,7 +273,7 @@ actor VoteSecure {
   };
 
   //casts and store votes
-  func castVote(pollName : Text, electionID : Nat, voterID : Nat, vote: Text): async Text {
+  public func castVote(pollName : Text, electionID : Nat, voterID : Nat, vote: Text): async Text {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
         let electionPollsArr = election.polls;
@@ -444,6 +444,5 @@ actor VoteSecure {
       };
     };
     return ("Fail", "Username does not exist");
-  };
 };
-
+}
