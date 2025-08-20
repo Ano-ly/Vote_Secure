@@ -18,10 +18,8 @@ const Adminsignup = () => {
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleSignUp = async () => {
-    // Clear previous error
     setErrorMsg("");
 
-    // Validate inputs
     if (!name || !email || !phone || !username || !password) {
       setErrorMsg("Please fill in all fields.");
       return;
@@ -29,11 +27,13 @@ const Adminsignup = () => {
 
     try {
       const backend = await backendActorPromise;
-
       const result = await backend.signup(name, email, phone, username, password);
       const [status, message] = result;
 
       if (status === "Success") {
+        // Save username globally in localStorage
+        localStorage.setItem("username", username);
+
         navigate("/dashboard", { state: { username } });
       } else {
         setErrorMsg(message || "Signup failed. Please try again.");
@@ -55,51 +55,22 @@ const Adminsignup = () => {
           <h1 className="text-white text-xl font-bold mb-4 md:text-2xl">Sign up</h1>
           <p className="text-white text-base max-w-96 leading-tight mb-6">Sign up as an admin</p>
 
-          {/* Error Message */}
           {errorMsg && <p className="text-red-500 text-sm mb-4">{errorMsg}</p>}
 
           <div className="flex flex-col border-none gap-4 w-full">
-            <input
-              type="text"
-              placeholder="Full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="input placeholder-gray-500 text-sm text-white w-full p-2 rounded-lg"
-            />
-            <input
-              type="text"
-              placeholder="E-mail address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input placeholder-gray-500 text-sm w-full p-2 rounded-lg text-white"
-            />
-            <input
-              type="number"
-              placeholder="Phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="input placeholder-gray-500 text-sm w-full p-2 rounded-lg text-white"
-            />
-            <input
-              type="text"
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="input placeholder-gray-500 text-sm w-full p-2 rounded-lg text-white"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input placeholder-gray-500 text-sm w-full p-2 rounded-lg text-white"
-            />
+            <input type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)}
+              className="input placeholder-gray-500 text-sm text-white w-full p-2 rounded-lg" />
+            <input type="text" placeholder="E-mail address" value={email} onChange={(e) => setEmail(e.target.value)}
+              className="input placeholder-gray-500 text-sm w-full p-2 rounded-lg text-white" />
+            <input type="number" placeholder="Phone number" value={phone} onChange={(e) => setPhone(e.target.value)}
+              className="input placeholder-gray-500 text-sm w-full p-2 rounded-lg text-white" />
+            <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)}
+              className="input placeholder-gray-500 text-sm w-full p-2 rounded-lg text-white" />
+            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}
+              className="input placeholder-gray-500 text-sm w-full p-2 rounded-lg text-white" />
           </div>
 
-          <button
-            onClick={handleSignUp}
-            className="text-white mt-8 bg-primary_blue w-full p-2 rounded-lg text-base"
-          >
+          <button onClick={handleSignUp} className="text-white mt-8 bg-primary_blue w-full p-2 rounded-lg text-base">
             Sign up
           </button>
 
