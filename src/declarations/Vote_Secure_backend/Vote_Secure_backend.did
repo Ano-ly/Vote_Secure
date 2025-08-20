@@ -1,0 +1,38 @@
+service : {
+  authenticateAdmin: (text, text) -> (text) query;
+  authenticateVoter: (nat, nat) -> (text);
+  castOverallVote: (nat, nat, vec record {
+                                    text;
+                                    text;
+                                  }) -> (text, text);
+  createNewElection: (text, text, text, text, text,
+   vec record {
+         text;
+         vec record {
+               text;
+               text;
+               text;
+             };
+       }) -> (text, text);
+  getCandidates: (nat) -> (text, text, vec record {
+                                             text;
+                                             vec text;
+                                           });
+  getElectionStats: (nat) ->
+   (vec record {
+          text;
+          vec record {
+                text;
+                nat;
+              };
+        }) query;
+  getEmailsnIDS: (nat) -> (vec record {
+                                 text;
+                                 nat;
+                               }) query;
+  getPollCandidates: (nat, text) -> (text, text, vec text);
+  regVotersFromCsv: (text, nat) -> (text, vec nat);
+  registerElectionVoters: (text, text, vec text, nat) -> (text);
+  registerVoters: (vec text, nat) -> (vec nat);
+  signup: (text, text, text, text, text) -> (text, text);
+}
