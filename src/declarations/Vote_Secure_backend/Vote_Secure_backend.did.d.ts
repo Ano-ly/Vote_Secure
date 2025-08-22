@@ -8,6 +8,21 @@ export interface _SERVICE {
     [bigint, bigint, Array<[string, string]>],
     [string, string]
   >,
+  'castVote' : ActorMethod<[string, bigint, bigint, string], string>,
+  'createAdmin' : ActorMethod<
+    [string, string, string, string, string],
+    boolean
+  >,
+  'createElection' : ActorMethod<
+    [
+      string,
+      string,
+      string,
+      Array<[string, Array<[string, string, string]>]>,
+      string,
+    ],
+    [string, string]
+  >,
   'createNewElection' : ActorMethod<
     [
       string,
@@ -18,6 +33,10 @@ export interface _SERVICE {
       Array<[string, Array<[string, string, string]>]>,
     ],
     [string, string]
+  >,
+  'createPoll' : ActorMethod<
+    [string, bigint, Array<[string, string, string]>],
+    string
   >,
   'getCandidates' : ActorMethod<
     [bigint],

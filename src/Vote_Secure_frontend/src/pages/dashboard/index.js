@@ -4,9 +4,10 @@ import AddCandidates from './AddCandidates';
 import Csvupload from './Csvupload';
 import VotingManagement1 from "./VotingManagement1";
 import VotingManagement2 from "./VotingManagement2";
+import PollCreated from './PollCreated';
 
 export{ Dashboard,Pollcreation,AddCandidates,
     Csvupload,
     VotingManagement1,
-    VotingManagement2,
+    VotingManagement2,PollCreated
 };

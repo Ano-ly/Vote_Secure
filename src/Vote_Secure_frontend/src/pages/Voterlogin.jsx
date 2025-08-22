@@ -24,6 +24,8 @@ const Voterlogin = () => {
       console.log("Authentication response:", response);
 
       if (response === "Success") {
+          localStorage.setItem("voterId", voterId);
+          localStorage.setItem("electionId", electionId);
         navigate("/votingpage");
       } else {
         setError(response); // Displays "Fail" or "ElectionID does not exist"

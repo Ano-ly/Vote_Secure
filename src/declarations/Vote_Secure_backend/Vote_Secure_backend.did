@@ -1,10 +1,21 @@
 service : {
-  authenticateAdmin: (text, text) -> (text) query;
+  authenticateAdmin: (text, text) -> (text);
   authenticateVoter: (nat, nat) -> (text);
   castOverallVote: (nat, nat, vec record {
                                     text;
                                     text;
                                   }) -> (text, text);
+  castVote: (text, nat, nat, text) -> (text);
+  createAdmin: (text, text, text, text, text) -> (bool);
+  createElection: (text, text, text,
+   vec record {
+         text;
+         vec record {
+               text;
+               text;
+               text;
+             };
+       }, text) -> (text, text);
   createNewElection: (text, text, text, text, text,
    vec record {
          text;
@@ -14,18 +25,22 @@ service : {
                text;
              };
        }) -> (text, text);
+  createPoll: (text, nat, vec record {
+                                text;
+                                text;
+                                text;
+                              }) -> (text);
   getCandidates: (nat) -> (text, text, vec record {
                                              text;
                                              vec text;
                                            });
-  getElectionStats: (nat) ->
-   (vec record {
-          text;
-          vec record {
-                text;
-                nat;
-              };
-        }) query;
+  getElectionStats: (nat) -> (vec record {
+                                    text;
+                                    vec record {
+                                          text;
+                                          nat;
+                                        };
+                                  });
   getEmailsnIDS: (nat) -> (vec record {
                                  text;
                                  nat;

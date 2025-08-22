@@ -14,19 +14,39 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
- const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
-
-  const backendActor = await backendActorPromise;
+  setErrorMessage("");
+  setSuccessMessage("");
 
   try {
+    const backendActor = await backendActorPromise;
     const response = await backendActor.authenticateAdmin(username, password);
+
     console.log("Backend Response:", response);
-    // Handle response logic
+
+    if (response === "Success") {
+      setSuccessMessage("Login successful! Redirecting...");
+      // Save session info if needed
+      localStorage.setItem("adminUsername", username);
+
+      // Redirect after short delay
+      setTimeout(() => {
+        navigate("/dashboard"); // replace with your admin dashboard route
+      }, 1000);
+    } else if (response === "Fail") {
+      setErrorMessage("Invalid password. Please try again.");
+    } else if (response === "Username does not exist") {
+      setErrorMessage("No admin found with that username.");
+    } else {
+      setErrorMessage("Unexpected response from server.");
+    }
   } catch (error) {
     console.error("Error authenticating admin:", error);
+    setErrorMessage("Something went wrong. Please try again later.");
   }
 };
+
 
   return (
     <div className="relative container-r">
@@ -44,7 +64,7 @@ const Login = () => {
           <form className="flex flex-col border-none gap-4 w-full" onSubmit={handleSubmit}>
             <input
               type="text"
-              placeholder="ID Code"
+              placeholder="User-name"
               className="input placeholder-gray-500 text-sm w-full text-center p-2 rounded-lg text-white"
               value={username}
               onChange={(e) => setUsername(e.target.value)}

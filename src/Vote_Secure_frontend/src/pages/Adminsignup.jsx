@@ -33,6 +33,8 @@ const Adminsignup = () => {
       if (status === "Success") {
         // Save username globally in localStorage
         localStorage.setItem("username", username);
+        localStorage.setItem("password", password);
+
 
         navigate("/dashboard", { state: { username } });
       } else {

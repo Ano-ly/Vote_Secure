@@ -29,18 +29,18 @@ actor VoteSecure {
   //returns "Success" if admin authenticated
   //returns "Fail" if admin not authenticated
   //returns "Username does not exist" if admin account with username provided does not exist
-  public query func authenticateAdmin(username : Text, password : Text) : async Text {
-    for (admin in ExistingAdmins.vals()) {
-      if (admin.username == username) {
-        if (password == admin.password) {
-          return "Success";
-        } else {
-          return "Fail";
-        };
+public func authenticateAdmin(username : Text, password : Text) : async Text {
+  for (admin in ExistingAdmins.vals()) {
+    if (admin.username == username) {
+      if (password == admin.password) {
+        return "Success";
+      } else {
+        return "Fail";
       };
     };
-    return "Username does not exist";
   };
+  return "Username does not exist";
+};
 
   //sign up for admin
   //Returns ("Success", "Nil") is successfully signed in
@@ -330,23 +330,22 @@ actor VoteSecure {
                     ]
   */
   //returns empty list if electionID does not exist
-  public query func getElectionStats(electionID : Nat): async [(Text, [(Text, Nat)])] {
-    for (election in ExistingElections.vals()) {
-      if (election.id == electionID) {
-        let electionStats = Buffer.Buffer<(Text, [(Text, Nat)])>(0);
-        for (poll in election.polls.vals()) {
-          let pollStats = Buffer.Buffer<(Text, Nat)>(0);
-          for (candidate in poll.candidates.vals()) {
-            pollStats.add((candidate.name, candidate.no_of_votes));
-          };
-          electionStats.add((poll.position, Buffer.toArray(pollStats)));
+public func getElectionStats(electionID : Nat): async [(Text, [(Text, Nat)])] {
+  for (election in ExistingElections.vals()) {
+    if (election.id == electionID) {
+      let electionStats = Buffer.Buffer<(Text, [(Text, Nat)])>(0);
+      for (poll in election.polls.vals()) {
+        let pollStats = Buffer.Buffer<(Text, Nat)>(0);
+        for (candidate in poll.candidates.vals()) {
+          pollStats.add((candidate.name, candidate.no_of_votes));
         };
-        return Buffer.toArray(electionStats);
+        electionStats.add((poll.position, Buffer.toArray(pollStats)));
       };
+      return Buffer.toArray(electionStats);
     };
-    return [];
   };
-
+  return [];
+};
   //Returns "Success" if voters successfully registered
   //Returns "ElectionID does not exist" if electionID does not exist
   public func regVotersFromCsv(csvInfo : Text, electionID : Nat) : async (Text, [Nat]) {

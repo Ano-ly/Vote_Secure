@@ -14,6 +14,8 @@
   "type": "module",
   "workspaces": [
     "src/Vote_Secure_frontend"
-  ]
- 
+  ],
+  "dependencies": {
+    "recharts": "^3.1.2"
+  }
 }

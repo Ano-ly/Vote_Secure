@@ -1,9 +1,35 @@
 export const idlFactory = ({ IDL }) => {
   return IDL.Service({
-    'authenticateAdmin' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], ['query']),
+    'authenticateAdmin' : IDL.Func([IDL.Text, IDL.Text], [IDL.Text], []),
     'authenticateVoter' : IDL.Func([IDL.Nat, IDL.Nat], [IDL.Text], []),
     'castOverallVote' : IDL.Func(
         [IDL.Nat, IDL.Nat, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))],
+        [IDL.Text, IDL.Text],
+        [],
+      ),
+    'castVote' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Nat, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
+    'createAdmin' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Bool],
+        [],
+      ),
+    'createElection' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Vec(
+            IDL.Tuple(
+              IDL.Text,
+              IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text, IDL.Text)),
+            )
+          ),
+          IDL.Text,
+        ],
         [IDL.Text, IDL.Text],
         [],
       ),
@@ -24,6 +50,11 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Text, IDL.Text],
         [],
       ),
+    'createPoll' : IDL.Func(
+        [IDL.Text, IDL.Nat, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text, IDL.Text))],
+        [IDL.Text],
+        [],
+      ),
     'getCandidates' : IDL.Func(
         [IDL.Nat],
         [IDL.Text, IDL.Text, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Text)))],
@@ -32,7 +63,7 @@ export const idlFactory = ({ IDL }) => {
     'getElectionStats' : IDL.Func(
         [IDL.Nat],
         [IDL.Vec(IDL.Tuple(IDL.Text, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))))],
-        ['query'],
+        [],
       ),
     'getEmailsnIDS' : IDL.Func(
         [IDL.Nat],

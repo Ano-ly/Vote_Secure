@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import Nav2 from '../../components/dashboard/Nav2';
-import { Input, DatePicker, Button, message } from 'antd';
+import { Input, DatePicker, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { backendActorPromise } from "../../utils/backend";
-
 
 const { TextArea } = Input;
 
@@ -29,41 +27,32 @@ const Pollcreation = () => {
     setDate(dateString);
   };
 
-  const handleSubmit = async () => {
-  try {
-    // If backendActorPromise is a promise, await it first
-    const backendActor = await backendActorPromise;
+  const handleSubmit = () => {
+    try {
+      // pollList = each position + empty candidate list
+      const pollList = positions.map((pos) => [pos, []]);
 
-    // Example values — replace with your form states
-    const date = selectedDate;        // e.g., "2025-08-15"
-    const adminName = currentAdmin;   // e.g., "john"
-    const adminPass = adminPassword;  // e.g., "1234"
-    const title = pollTitle;          // e.g., "Presidential Election"
-    const desc = pollDescription;     // e.g., "Vote for your candidate"
-    const pollList = polls;           // must be [(Text, [(Text, Text, Text)])]
+      const adminName = localStorage.getItem("username") || "admin";
 
-    // Call backend function
-    const [status, message] = await backendActor.createNewElection(
-      date,
-      adminName,
-      adminPass,
-      title,
-      desc,
-      pollList
-    );
+      // ✅ Store election data in localStorage instead of API
+      const electionData = {
+        title,
+        description,
+        date,
+        positions,
+        pollList,
+        adminName,
+      };
 
-    if (status === "Fail") {
-      console.error("Error:", message);
-      alert(`Failed: ${message}`);
-    } else {
-      console.log("Election created:", message);
-      alert("Election created successfully!");
+      localStorage.setItem("currentElection", JSON.stringify(electionData));
+
+      alert("Election saved locally!");
+      navigate("/Addcandidates");
+    } catch (error) {
+      console.error("Error saving election:", error);
+      alert("An error occurred while saving the election.");
     }
-  } catch (error) {
-    console.error("Error creating election:", error);
-    alert("An error occurred while creating the election.");
-  }
-};
+  };
 
   return (
     <div className='bg-main_bg_color container-r flex flex-col pb-9'>
@@ -76,8 +65,7 @@ const Pollcreation = () => {
           <h1 className='text-xl text-white font-bold'>Create your Poll</h1>
           <p className='text-center text-sm text-white text-opacity-40'>
             Set up polls effortlessly on VoteSecure, with blockchain ensuring
-            every vote is protected. Customize <br /> options, track real-time
-            results, and guarantee transparent, tamper-proof outcomes.
+            every vote is protected.
           </p>
         </div>
 
@@ -85,7 +73,6 @@ const Pollcreation = () => {
           <div className='flex flex-col gap-3'>
             <p className='text-white'>Title</p>
             <Input
-              className='bg-slate-600 bg-opacity-50 focus:bg-opacity-70 focus:ring-2 hover:ring-2 placeholder-slate-500 text-white hover:bg-slate-600 focus:bg-slate-600 border-0'
               placeholder='Please Enter your Title...'
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -95,7 +82,6 @@ const Pollcreation = () => {
           <div className='flex flex-col gap-3'>
             <p className='text-white'>Description</p>
             <TextArea
-              className='bg-slate-600 bg-opacity-50 focus:bg-opacity-70 focus:ring-2 hover:ring-2 text-white hover:bg-slate-600 placeholder-slate-500 focus:bg-slate-600 border-0'
               rows={7}
               placeholder='Please Enter your Description'
               value={description}
@@ -106,20 +92,14 @@ const Pollcreation = () => {
           <div className='flex gap-2 py-5'>
             <div className='flex flex-col gap-3 w-2/4'>
               <p className='text-white'>Date</p>
-              <DatePicker
-                className='bg-slate-600 bg-opacity-50 focus:bg-opacity-70 focus:ring-2 hover:ring-2 text-white hover:bg-slate-600 placeholder-slate-500 focus:bg-slate-600 border-0'
-                onChange={onChangeDate}
-              />
+              <DatePicker onChange={onChangeDate} />
             </div>
-            <div className='w-1/4'></div>
-            <div></div>
           </div>
 
           <div className='flex flex-col w-full gap-5 py-5'>
             {positions.map((position, index) => (
               <Input
                 key={index}
-                className='bg-slate-600 bg-opacity-50 focus:bg-opacity-70 focus:ring-2 hover:ring-2 placeholder-slate-500 text-white hover:bg-slate-600 focus:bg-slate-600 border-0'
                 placeholder={`Please Enter Position ${index + 1}`}
                 value={position}
                 onChange={(event) => handlePositionChange(index, event)}
