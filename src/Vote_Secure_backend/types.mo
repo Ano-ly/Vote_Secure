@@ -40,7 +40,6 @@ module {
     principal : Principal;
     phoneNo : Text;
     username : Text;
-    password : Text;
     var elections : [Election];
   };
 };
