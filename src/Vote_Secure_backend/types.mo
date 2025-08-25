@@ -1,4 +1,6 @@
 module {
+  import Principal "mo:base/Principal";
+
   //Type Candidate
   public type Candidate = {
     name : Text;
@@ -21,7 +23,7 @@ module {
   public type Election = {
     title : Text;
     var id : Nat;
-    adminName : Text;
+    adminPrincipal : Principal;
     description : Text;
     date_created : Text;
     var voterIDsArr : [Nat];
@@ -35,6 +37,7 @@ module {
   public type Admin = {
     name : Text;
     email : Text;
+    principal : Principal;
     phoneNo : Text;
     username : Text;
     password : Text;
