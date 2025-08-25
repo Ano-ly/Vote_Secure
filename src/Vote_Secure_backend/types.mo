@@ -1,6 +1,6 @@
-module {
-  import Principal "mo:base/Principal";
+import Principal "mo:base/Principal";
 
+module {
   //Type Candidate
   public type Candidate = {
     name : Text;
