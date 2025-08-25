@@ -17,7 +17,7 @@ actor VoteSecure {
 
   //gets list of emails and corresponding ids
   //returns empty list if election with electionID does not exist
-  public shared ({ caller }) query func getEmailsnIDS(electionID : Nat) : async [(Text, Nat)] {
+  public shared query ({ caller }) func getEmailsnIDS(electionID : Nat) : async [(Text, Nat)] {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
         if (election.adminPrincipal != caller) {
@@ -33,7 +33,7 @@ actor VoteSecure {
   //returns "Success" if admin authenticated
   //returns "Fail" if admin not authenticated
   //returns "Admin does not exist" if admin account with caller provided does not exist
-  public query shared ({ caller }) func authenticateAdmin() : async Text {
+  public shared query ({ caller }) func authenticateAdmin() : async Text {
     for (admin in ExistingAdmins.vals()) {
       if (admin.principal == caller) {
         return "Success";
@@ -336,7 +336,7 @@ actor VoteSecure {
                     ]
   */
   //returns empty list if electionID does not exist
-  public shared ({ caller }) query func getElectionStats(electionID : Nat): async [(Text, [(Text, Nat)])] {
+  public shared query ({ caller }) func getElectionStats(electionID : Nat): async [(Text, [(Text, Nat)])] {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
         if (election.adminPrincipal != caller) {
