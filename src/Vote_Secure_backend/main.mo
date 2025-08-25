@@ -22,8 +22,9 @@ actor VoteSecure {
       if (election.id == electionID) {
         if (election.adminPrincipal != caller) {
           return [];
+        } else {
+          return Array.freeze(election.realVotersArr);
         }
-        return Array.freeze(election.realVotersArr);
       };
     };
     return [];
