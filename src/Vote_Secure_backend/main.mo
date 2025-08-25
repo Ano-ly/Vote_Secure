@@ -226,7 +226,7 @@ actor VoteSecure {
       if (election.id == electionID) {
         if (election.adminPrincipal != caller) {
           return [];
-        }
+        };
         let numValidVoters = Array.size(voterInfo);
         let realVoters = Buffer.Buffer<(Text, Nat)>(numValidVoters);
         let voterIDs = Buffer.Buffer<Nat>(numValidVoters);
@@ -342,7 +342,7 @@ actor VoteSecure {
       if (election.id == electionID) {
         if (election.adminPrincipal != caller) {
           return [];
-        }
+        };
         let electionStats = Buffer.Buffer<(Text, [(Text, Nat)])>(0);
         for (poll in election.polls.vals()) {
           let pollStats = Buffer.Buffer<(Text, Nat)>(0);
