@@ -1,6 +1,7 @@
 import Array "mo:base/Array";
 import Buffer "mo:base/Buffer";
 import Nat "mo:base/Nat";
+import Principal "mo:base/Principal";
 
 import Types "./types";
 import Utils "./utils";
@@ -16,9 +17,12 @@ actor VoteSecure {
 
   //gets list of emails and corresponding ids
   //returns empty list if election with electionID does not exist
-  public query func getEmailsnIDS(electionID : Nat) : async [(Text, Nat)] {
+  public shared ({ caller }) query func getEmailsnIDS(electionID : Nat) : async [(Text, Nat)] {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
+        if (election.adminPrincipal != caller) {
+          return [];
+        }
         return Array.freeze(election.realVotersArr);
       };
     };
@@ -28,25 +32,23 @@ actor VoteSecure {
   //authenticates admin (for admin login)
   //returns "Success" if admin authenticated
   //returns "Fail" if admin not authenticated
-  //returns "Username does not exist" if admin account with username provided does not exist
-  public query func authenticateAdmin(username : Text, password : Text) : async Text {
+  //returns "Admin does not exist" if admin account with caller provided does not exist
+  public query shared ({ caller }) func authenticateAdmin() : async Text {
     for (admin in ExistingAdmins.vals()) {
-      if (admin.username == username) {
-        if (password == admin.password) {
-          return "Success";
-        } else {
-          return "Fail";
-        };
+      if (admin.principal == caller) {
+        return "Success";
+      } else {
+        return "Fail";
       };
     };
-    return "Username does not exist";
+    return "Admin does not exist";
   };
 
   //sign up for admin
   //Returns ("Success", "Nil") is successfully signed in
   //Returns ("Fail", "<Error message>") if sign in failed
-  public func signup (name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async (Text, Text) {
-    let isAdminCreated = await createAdmin(name, email, phoneNo, username, password);
+  public shared ({ caller }) func signup (name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async (Text, Text) {
+    let isAdminCreated = await createAdmin(name, email, caller, phoneNo, username, password);
     if (isAdminCreated == true) {
       return ("Success", "Nil");
     } else {
@@ -55,7 +57,7 @@ actor VoteSecure {
   };
 
   //creates an Admin record and persists to stable storage
-  public func createAdmin(name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async Bool {
+  public func createAdmin(name : Text, email : Text, principal : Principal, phoneNo : Text, username : Text, password : Text) : async Bool {
     //check if username exists; username must be unique
     let OptUsrname = Array.find<Text>(ExistingUsernames, func x = x == username);
     let usrname = switch (OptUsrname) {
@@ -66,6 +68,7 @@ actor VoteSecure {
       let newAdmin : Types.Admin = {
         name = name;
         email = email;
+        principal = principal;
         phoneNo = phoneNo;
         username = username;
         password = password;
@@ -152,7 +155,7 @@ actor VoteSecure {
   //sample pollList : [("President", [("CandidateA", "Manifesto: I will make the world a better place"), ("CandidateB", "Manifesto: I will make the world a better place")])]
   //returns ("Success", <ID of new election>) if successful
   //returns ("Fail", "<Error message>") if fail
-  public func createElection(date: Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])], adminName : Text) : async (Text, Text) {
+  public shared ({ caller }) func createElection(date: Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])], adminName : Text) : async (Text, Text) {
     for (admin in ExistingAdmins.vals()) {
       //if admin with username adminName found:
       if (admin.username == adminName) {
@@ -161,7 +164,7 @@ actor VoteSecure {
         var newElection : Types.Election = {
           var id = 0;
           title = title;
-          adminName = adminName;
+          adminPrincipal = caller;
           var voterIDsArr = [];
           var realVotersArr = [var];
           var polls = [];
@@ -216,10 +219,13 @@ actor VoteSecure {
   };
 
   //registers voters
-  //returns empty list if election with electionID does not exist
-  public func registerVoters(voterInfo: [Text], electionID : Nat) : async [Nat] {
+  //returns empty list if election with electionID does not exist or caller not authorised
+  public shared ({ caller }) func registerVoters(voterInfo: [Text], electionID : Nat) : async [Nat] {
     for (election in ExistingElections.vals()){
       if (election.id == electionID) {
+        if (election.adminPrincipal != caller) {
+          return [];
+        }
         let numValidVoters = Array.size(voterInfo);
         let realVoters = Buffer.Buffer<(Text, Nat)>(numValidVoters);
         let voterIDs = Buffer.Buffer<Nat>(numValidVoters);
@@ -330,9 +336,12 @@ actor VoteSecure {
                     ]
   */
   //returns empty list if electionID does not exist
-  public query func getElectionStats(electionID : Nat): async [(Text, [(Text, Nat)])] {
+  public shared ({ caller }) query func getElectionStats(electionID : Nat): async [(Text, [(Text, Nat)])] {
     for (election in ExistingElections.vals()) {
       if (election.id == electionID) {
+        if (election.adminPrincipal != caller) {
+          return [];
+        }
         let electionStats = Buffer.Buffer<(Text, [(Text, Nat)])>(0);
         for (poll in election.polls.vals()) {
           let pollStats = Buffer.Buffer<(Text, Nat)>(0);
@@ -349,7 +358,7 @@ actor VoteSecure {
 
   //Returns "Success" if voters successfully registered
   //Returns "ElectionID does not exist" if electionID does not exist
-  public func regVotersFromCsv(csvInfo : Text, electionID : Nat) : async (Text, [Nat]) {
+  public shared ({ caller }) func regVotersFromCsv(csvInfo : Text, electionID : Nat) : async (Text, [Nat]) {
     let emailList = await csvUpload.uploadFromCsv(csvInfo);
     let regInfo : [Nat] = await registerVoters(emailList, electionID);
     if (Array.size(regInfo) == 0) {
@@ -432,12 +441,12 @@ actor VoteSecure {
   };
 
   //public function: creates new election
-  public func createNewElection(date : Text, adminName : Text, adminPass : Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])]) : async (Text, Text) {
+  public shared ({ caller }) func createNewElection(date : Text, adminName : Text, adminPass : Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])]) : async (Text, Text) {
     for (admin in ExistingAdmins.vals()) {
       if (admin.username == adminName) {
         if (adminPass == admin.password) {
-          let electionReturn : (Text, Text) = await createElection(date, title, desc, pollList, adminName);
-          return electionReturn;
+            let electionReturn : (Text, Text) = await createElection(date, title, desc, pollList, adminName);
+            return electionReturn;
         } else {
           return ("Fail", "Wrong Password");
         };
