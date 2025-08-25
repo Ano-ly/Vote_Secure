@@ -48,8 +48,8 @@ actor VoteSecure {
   //sign up for admin
   //Returns ("Success", "Nil") is successfully signed in
   //Returns ("Fail", "<Error message>") if sign in failed
-  public shared ({ caller }) func signup (name : Text, email : Text, phoneNo : Text, username : Text, password : Text) : async (Text, Text) {
-    let isAdminCreated = await createAdmin(name, email, caller, phoneNo, username, password);
+  public shared ({ caller }) func signup (name : Text, email : Text, phoneNo : Text, username : Text) : async (Text, Text) {
+    let isAdminCreated = await createAdmin(name, email, caller, phoneNo, username);
     if (isAdminCreated == true) {
       return ("Success", "Nil");
     } else {
@@ -58,7 +58,7 @@ actor VoteSecure {
   };
 
   //creates an Admin record and persists to stable storage
-  public func createAdmin(name : Text, email : Text, principal : Principal, phoneNo : Text, username : Text, password : Text) : async Bool {
+  public func createAdmin(name : Text, email : Text, principal : Principal, phoneNo : Text, username : Text) : async Bool {
     //check if username exists; username must be unique
     let OptUsrname = Array.find<Text>(ExistingUsernames, func x = x == username);
     let usrname = switch (OptUsrname) {
@@ -72,7 +72,6 @@ actor VoteSecure {
         principal = principal;
         phoneNo = phoneNo;
         username = username;
-        password = password;
         var elections = [];
       };
 
@@ -427,14 +426,14 @@ actor VoteSecure {
 
   //public function: registers voters
   //calls registerVoters(...)
-  public func registerElectionVoters(adminName : Text, adminPass : Text, voterInfo: [Text], electionID : Nat) : async Text {
+  public shared ({ caller }) func registerElectionVoters(adminName : Text, voterInfo: [Text], electionID : Nat) : async Text {
     for (admin in ExistingAdmins.vals()) {
       if (admin.username == adminName) {
-        if (adminPass == admin.password) {
+        if (caller == admin.principal) {
           let regVReturnVal : [Nat] = await registerVoters(voterInfo, electionID);
           return "Voters Successfully Registered" # debug_show(regVReturnVal);
         } else {
-          return "Wrong Password";
+          return "Unauthorized";
         };
       };
     };
@@ -442,10 +441,10 @@ actor VoteSecure {
   };
 
   //public function: creates new election
-  public shared ({ caller }) func createNewElection(date : Text, adminName : Text, adminPass : Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])]) : async (Text, Text) {
+  public shared ({ caller }) func createNewElection(date : Text, adminName : Text, title : Text, desc : Text, pollList : [(Text, [(Text, Text, Text)])]) : async (Text, Text) {
     for (admin in ExistingAdmins.vals()) {
       if (admin.username == adminName) {
-        if (adminPass == admin.password) {
+        if (caller == admin.principal) {
             let electionReturn : (Text, Text) = await createElection(date, title, desc, pollList, adminName);
             return electionReturn;
         } else {
